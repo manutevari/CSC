@@ -16,7 +16,6 @@ with st.sidebar:
     st.header("Add Knowledge")
 
     text_input = st.text_area("Paste knowledge")
-
     url_input = st.text_input("Paste URL")
 
     if st.button("Add Knowledge"):
@@ -29,13 +28,10 @@ with st.sidebar:
             add_knowledge(url_input)
             st.success("URL added")
 
-
 # Chat history
 for msg in st.session_state.messages:
-
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
-
 
 # Chat input
 query = st.chat_input("Ask CSC related question")
@@ -43,8 +39,8 @@ query = st.chat_input("Ask CSC related question")
 if query:
 
     st.session_state.messages.append({
-        "role":"user",
-        "content":query
+        "role": "user",
+        "content": query
     })
 
     with st.chat_message("user"):
@@ -56,6 +52,6 @@ if query:
         st.write(answer)
 
     st.session_state.messages.append({
-        "role":"assistant",
-        "content":answer
+        "role": "assistant",
+        "content": answer
     })
