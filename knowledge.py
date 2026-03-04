@@ -4,11 +4,11 @@ from crawler import crawl_website
 
 def add_knowledge(input_data):
 
-    # If URL
+    # URL input
     if input_data.startswith("http"):
         pages = crawl_website(input_data)
-        return f"Added {pages} pages"
+        return f"{pages} pages added from website"
 
-    # If plain text
+    # Manual text
     store_vector(input_data, source="manual")
-    return "Knowledge added"
+    return "Knowledge added successfully"
