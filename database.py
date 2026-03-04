@@ -1,18 +1,12 @@
 import psycopg2
-from openai import OpenAI
-import os
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-
-client = OpenAI(api_key=OPENAI_API_KEY)
+import streamlit as st
 
 conn = psycopg2.connect(
-    host="aws-1-ap-south-1.pooler.supabase.com",
-    port=6543,
-    database="postgres",
-    user="postgres.yourprojectid",
-    password=DB_PASSWORD,
+    host=st.secrets["DB_HOST"],
+    port=st.secrets["DB_PORT"],
+    database=st.secrets["DB_NAME"],
+    user=st.secrets["DB_USER"],
+    password=st.secrets["DB_PASSWORD"],
     sslmode="require"
 )
 
