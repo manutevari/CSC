@@ -1,21 +1,24 @@
+import streamlit as st
 import psycopg2
 from openai import OpenAI
 
-# connect database
+# Database connection
 conn = psycopg2.connect(
-    host="aws-1-ap-south-1.pooler.supabase.com",
-    port=6543,
-    database="postgres",
-    user="postgres",
-    password="YOUR_PASSWORD",
+    host=st.secrets["DB_HOST"],
+    port=st.secrets["DB_PORT"],
+    database=st.secrets["DB_NAME"],
+    user=st.secrets["DB_USER"],
+    password=st.secrets["DB_PASSWORD"],
     sslmode="require"
 )
 
 cursor = conn.cursor()
 
-client = OpenAI()
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+
 
 def store_vector(text, source="manual"):
+
     emb = client.embeddings.create(
         model="text-embedding-3-small",
         input=text
@@ -34,7 +37,7 @@ def store_vector(text, source="manual"):
     conn.commit()
 
 
-def search_similar(query, top_k=5):
+def vector_search(query, top_k=5):
 
     emb = client.embeddings.create(
         model="text-embedding-3-small",
@@ -53,4 +56,4 @@ def search_similar(query, top_k=5):
         (vector, top_k)
     )
 
-    return [r[0] for r in cursor.fetchall()]
+    return "\n".join([r[0] for r in cursor.fetchall()])
