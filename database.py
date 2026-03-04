@@ -1,13 +1,15 @@
-import psycopg2
-import streamlit as st
+def vector_search(query, top_k=5):
+    embedding = get_embedding(query)
 
-conn = psycopg2.connect(
-    host=st.secrets["DB_HOST"],
-    port=st.secrets["DB_PORT"],
-    database=st.secrets["DB_NAME"],
-    user=st.secrets["DB_USER"],
-    password=st.secrets["DB_PASSWORD"],
-    sslmode="require"
-)
+    cursor.execute(
+        """
+        SELECT content
+        FROM documents
+        ORDER BY embedding <=> %s::vector
+        LIMIT %s
+        """,
+        (embedding, top_k)
+    )
 
-cursor = conn.cursor()
+    results = cursor.fetchall()
+    return [r[0] for r in results]
