@@ -5,9 +5,5 @@ requests
 beautifulsoup4
 pypdf
 python-docx
-langchain
-langchain-openai
-langgraph
 tavily
-psycopg2-binary
 langchain-text-splitters
