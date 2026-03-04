@@ -1,1 +1,10 @@
+streamlit
+openai
+psycopg2-binary
+requests
+beautifulsoup4
+pypdf
+python-docx
+tavily
+langchain-text-splitters
 
