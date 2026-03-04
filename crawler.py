@@ -1,42 +1,13 @@
-def crawl_website(base_url, max_pages=10):
+from database import store_vector
+from crawler import crawl_website
 
-    visited = set()
 
-    to_visit = [base_url]
+def add_knowledge(input_data):
 
-    pages_added = 0
+    if input_data.startswith("http"):
+        pages = crawl_website(input_data)
+        return f"{pages} pages added from website"
 
-    while to_visit and pages_added < max_pages:
+    store_vector(input_data, source="manual")
 
-        url = to_visit.pop(0)
-
-        if url in visited:
-            continue
-
-        visited.add(url)
-
-        text = extract_page_text(url)
-
-        if len(text) > 200:
-
-            chunks = chunk_document(text)
-
-            for c in chunks:
-                store_vector(c, source=url)
-
-            pages_added += 1
-
-        try:
-
-            links = get_internal_links(url)
-
-            for l in links:
-
-                if l not in visited:
-                    to_visit.append(l)
-
-        except:
-            pass
-
-    return pages_added
-
+    return "Knowledge added successfully"
