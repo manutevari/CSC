@@ -1,15 +1,14 @@
-def vector_search(query, top_k=5):
-    embedding = get_embedding(query)
+import streamlit as st
+from database import store_vector
+from crawler import crawl_website
 
-    cursor.execute(
-        """
-        SELECT content
-        FROM documents
-        ORDER BY embedding <=> %s::vector
-        LIMIT %s
-        """,
-        (embedding, top_k)
-    )
+def add_knowledge(input_data):
 
-    results = cursor.fetchall()
-    return [r[0] for r in results]
+    # URL input
+    if input_data.startswith("http"):
+        pages = crawl_website(input_data)
+        return f"{pages} pages added from website"
+
+    # Manual text
+    store_vector(input_data, source="manual")
+    return "Knowledge added successfully"
