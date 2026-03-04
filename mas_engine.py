@@ -1,6 +1,5 @@
-from database import vector_search
+from database import search_similar as vector_search
 from knowledge import add_knowledge
-
 def ask(query):
 
     context = vector_search(query)
@@ -14,3 +13,4 @@ Answer:
 """
 
     return response
+
