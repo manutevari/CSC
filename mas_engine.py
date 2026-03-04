@@ -1,5 +1,5 @@
 from database import vector_search
-from knowledge import add_knowledge
+
 
 def ask(query):
 
