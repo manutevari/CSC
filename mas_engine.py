@@ -28,6 +28,26 @@ CHILD_DATA_MARKERS = re.compile(
     re.IGNORECASE,
 )
 
+DEVANAGARI_PATTERN = re.compile(r"[\u0900-\u097F]")
+HINDI_REQUEST_PATTERN = re.compile(r"\b(hindi|hindee|हिंदी|हिन्दी|हिंदि|हिन्दि)\b", re.IGNORECASE)
+
+
+def _language(query, response_language="auto"):
+
+    if response_language == "hi":
+        return "hi"
+    if response_language == "en":
+        return "en"
+    if DEVANAGARI_PATTERN.search(query or "") or HINDI_REQUEST_PATTERN.search(query or ""):
+        return "hi"
+
+    return "en"
+
+
+def _is_hindi(query, response_language="auto"):
+
+    return _language(query, response_language) == "hi"
+
 
 def _secret(name, default=""):
 
@@ -75,7 +95,7 @@ def _has_child_data(text):
     return bool(CHILD_DATA_MARKERS.search(text or ""))
 
 
-def _sentiment_prefix(query):
+def _sentiment_prefix(query, response_language="auto"):
 
     text = query or ""
     lower = text.lower()
@@ -84,6 +104,8 @@ def _sentiment_prefix(query):
     caps_ratio = sum(1 for ch in letters if ch.isupper()) / max(1, len(letters))
 
     if any(term in lower for term in frustrated_terms) or (len(letters) >= 12 and caps_ratio > 0.65):
+        if _is_hindi(query, response_language):
+            return "समझ गया। मैं CSC/आधिकारिक स्रोतों की सीमा में रहते हुए सीधे उपयोगी उत्तर दे रहा हूं।\n\n"
         return "I understand. Let me give you the useful answer directly, while staying inside CSC-approved sources.\n\n"
 
     return ""
@@ -122,18 +144,28 @@ def _provider_chain():
     ]
 
 
-def _llm_answer(provider, query, context, history=None):
+def _llm_answer(provider, query, context, history=None, response_language="auto"):
+
+    lang = _language(query, response_language)
+    language_rule = (
+        "Respond in Hindi using clear Devanagari Hindi. Keep official service names and URLs unchanged."
+        if lang == "hi"
+        else "Respond in English."
+    )
 
     messages = [
         {
             "role": "system",
             "content": (
                 "You are a CSC guardrailed chatbot. Answer only from retrieved CSC-approved website knowledge. "
+                f"{language_rule} "
                 f"Allowed source domains are: {allowed_domains_label()}. "
                 "Do not use general knowledge, memory, assumptions, or non-CSC sources. "
                 "If the retrieved knowledge does not answer the question, say: "
                 "'I can answer only from approved CSC website data, and this was not found in the indexed CSC data.' "
                 "Do not ask for Aadhaar, PAN, phone, bank, password, OTP, or child/minor personal data in chat. "
+                "Explain like a Class 8 student can understand: short sentences, simple words, and numbered steps. "
+                "Avoid legal/technical jargon unless the source uses the exact word, and explain that word simply. "
                 "For form-filling help, give a VLE-friendly guide with: service/form name, official source URL, "
                 "who can apply if stated, documents/prerequisites if stated, field-by-field filling guidance if stated, "
                 "submission/verification steps if stated, mistakes to avoid, and DPDP privacy notes. "
@@ -187,30 +219,125 @@ def _llm_answer(provider, query, context, history=None):
         return ""
 
 
-def _format_urls(urls):
+def _format_urls(urls, response_language="auto"):
 
     if not urls:
         return ""
 
     lines = "\n".join(f"- {url}" for url in urls[:5])
-    return f"\n\nSuggested CSC URLs to index/check:\n{lines}"
+    if response_language == "hi":
+        return f"\n\nOfficial links जो मदद कर सकते हैं:\n{lines}"
+
+    return f"\n\nOfficial links that may help:\n{lines}"
 
 
-def _guardrail_refusal(reason, urls=None, query=""):
+def _hindi_reason(reason):
+
+    known = {
+        "No approved source context is available for this question.": "इस प्रश्न के लिए अभी approved official source data उपलब्ध नहीं है।",
+        "Possible child/minor personal data was detected.": "बच्चे/नाबालिग से जुड़ा संभावित personal data मिला है, इसलिए मैं केवल सुरक्षित सामान्य guidance दे सकता हूं।",
+        "Verified source data is available, but live AI processing is not enabled.": "Verified source data उपलब्ध है, इसलिए मैं सुरक्षित local guidance दे रहा हूं।",
+        "Live AI response is unavailable, so I am showing verified source guidance.": "Live AI response उपलब्ध नहीं है, इसलिए मैं verified source guidance दिखा रहा हूं।",
+    }
+
+    if reason in known:
+        return known[reason]
+    if reason == "Live search is not available.":
+        return "Live search अभी उपलब्ध नहीं है।"
+    if reason == "Tavily search failed.":
+        return "Live official-source search सफल नहीं हुआ।"
+    if reason == "No Tavily result matched the CSC allowlist.":
+        return "Approved official source में matching result नहीं मिला।"
+
+    return reason
+
+
+def _public_reason(reason, response_language="auto"):
+
+    if response_language == "hi":
+        if reason in {"Live search is not available.", "Tavily search failed.", "No Tavily result matched the CSC allowlist."}:
+            return "इस समय मुझे इस exact service/form की verified official detail नहीं मिल पा रही है।"
+        return "इस exact service/form की पूरी verified detail मेरे पास अभी उपलब्ध नहीं है।"
+
+    if reason in {"Live search is not available.", "Tavily search failed.", "No Tavily result matched the CSC allowlist."}:
+        return "I cannot get verified official details for this exact service/form right now."
+
+    return "I do not have enough verified details for this exact service/form yet."
+
+
+def _guardrail_refusal(reason, urls=None, query="", response_language="auto"):
+
+    if _is_hindi(query, response_language):
+        return (
+            _sentiment_prefix(query, response_language)
+            + f"{_public_reason(reason, 'hi')}\n\n"
+            "कृपया service/form का exact नाम लिखें, या नीचे दिए official links पर details check करें।"
+            f"{_format_urls(urls or [], 'hi')}"
+        )
 
     return (
-        _sentiment_prefix(query)
-        + "I can answer only from approved CSC/official service data, and this was not found in the available data.\n\n"
-        f"{reason}\n\n"
-        "Use the sidebar to index an approved CSC URL, or enable Tavily live CSC search with `TAVILY_API_KEY`."
-        f"{_format_urls(urls or [])}"
+        _sentiment_prefix(query, response_language)
+        + f"{_public_reason(reason, 'en')}\n\n"
+        "Please share the exact service name, or check the official links below for the service details."
+        f"{_format_urls(urls or [], 'en')}"
     )
 
 
-def _local_chatbot_answer(query, context, reason):
+def _local_chatbot_answer(query, context, reason, response_language="auto"):
 
     if context:
-        return f"""{_sentiment_prefix(query)}I found approved CSC/official service data and will stay in local privacy mode.
+        is_builtin_form_guide = (
+            "Class 8 level guide" in context
+            or "CSC form-filling guide for PAN card" in context
+            or "PAN card form भरने की CSC guide" in context
+            or "Class 8 level guide:" in context
+        )
+        if is_builtin_form_guide:
+            if _is_hindi(query, response_language):
+                reason = _hindi_reason(reason)
+                return f"""{_sentiment_prefix(query, response_language)}यह approved CSC/official service source के आधार पर आसान guide है।
+
+DPDP सुरक्षा: Aadhaar, PAN number, bank details, OTP, password या बच्चे/नाबालिग का personal data इस chat में न डालें। ऐसी जानकारी केवल official CSC/service portal में ही भरें।
+
+{context}
+
+{reason}
+"""
+
+            return f"""{_sentiment_prefix(query, response_language)}Here is the simple guide from approved CSC/official service sources.
+
+DPDP safety: Do not paste Aadhaar, PAN number, bank details, OTP, passwords, or child/minor personal data in this chat. Enter those only inside the official CSC/service portal.
+
+{context}
+
+{reason}
+"""
+
+        if _is_hindi(query, response_language):
+            reason = _hindi_reason(reason)
+            return f"""{_sentiment_prefix(query, response_language)}मुझे स्वीकृत CSC/आधिकारिक सेवा डेटा मिला है और मैं local privacy mode में रहकर उत्तर दे रहा हूं।
+
+Class 8 जैसी आसान भाषा में समझें: form भरना मतलब सही service चुनना, citizen की सही जानकारी भरना, documents लगाना, submit करना, और receipt/reference number सुरक्षित रखना।
+
+नीचे दिए गए source के आधार पर service form भरें। DPDP सुरक्षा के लिए Aadhaar, PAN number, bank details, OTP, password या बच्चे/नाबालिग का personal data इस chat में न डालें। ऐसी जानकारी केवल official CSC/service portal में ही भरें।
+
+Form भरने की checklist:
+1. Source से सही CSC service/form name confirm करें।
+2. Eligibility, documents, fee और prerequisites source में जांचें।
+3. केवल वही fields भरें जो official form मांगता है।
+4. Applicant के documents के अनुसार name, date, ID और contact details match करें।
+5. Consent, declaration, payment और final submission status official portal पर review करें।
+6. अगर कोई required field या document source में नहीं दिख रहा है, तो submission से पहले official CSC/service portal पर verify करें।
+
+प्राप्त CSC source text:
+{context}
+
+{reason}
+"""
+
+        return f"""{_sentiment_prefix(query, response_language)}I found approved CSC/official service data and will stay in local privacy mode.
+
+Class 8 simple meaning: filling a form means choosing the right service, entering correct citizen details, attaching required documents, submitting, and saving the receipt/reference number.
 
 Use the source text below to fill the service form. For DPDP safety, do not paste Aadhaar, PAN, bank details, OTP, passwords, or child/minor personal data in this chat. Enter those only inside the official CSC/service portal.
 
@@ -229,25 +356,33 @@ Retrieved CSC source text:
 """
 
     setup_hint = (
-        "Add an allowed CSC URL in the sidebar first. Then enable cloud processing only if DPDP consent is available."
+        "Please use an official CSC/service URL or ask with the exact service name."
     )
+
+    if _is_hindi(query, response_language):
+        reason = _hindi_reason(reason)
+        return (
+            _sentiment_prefix(query, response_language)
+            + "मैं CSC guardrail mode में हूं और non-CSC data का उपयोग नहीं करूंगा। "
+            f"{reason}\n\n"
+            "कृपया official CSC/service URL या exact service name के साथ पूछें।"
+        )
 
     return (
-        _sentiment_prefix(query)
+        _sentiment_prefix(query, response_language)
         + "I am running in CSC guardrail mode and will not use non-CSC data. "
         f"{reason}\n\n"
-        f"{setup_hint}\n\n"
-        f"Allowed domains: {allowed_domains_label()}."
+        f"{setup_hint}"
     )
 
 
-def ask(query, cloud_consent=False, history=None):
+def ask(query, cloud_consent=False, history=None, response_language="auto"):
 
     context = vector_search(query)
     suggested_urls = []
 
     if not context:
-        builtin_context = builtin_service_context(query)
+        builtin_context = builtin_service_context(query, language=_language(query, response_language))
         if builtin_context:
             context = builtin_context
 
@@ -255,9 +390,10 @@ def ask(query, cloud_consent=False, history=None):
         if not cloud_consent:
             suggested_urls = suggested_csc_urls(query, max_results=5)
             return _guardrail_refusal(
-                "No approved CSC website context is indexed yet. Turn on cloud processing to let Tavily search approved CSC domains live, or add one of the suggested URLs in the sidebar.",
+                "No approved source context is available for this question.",
                 urls=suggested_urls,
                 query=query,
+                response_language=response_language,
             )
 
         live = tavily_csc_search(_redact_personal_data(query), max_results=5)
@@ -266,9 +402,10 @@ def ask(query, cloud_consent=False, history=None):
 
         if not context:
             return _guardrail_refusal(
-                live.get("error") or "No approved CSC website context is currently available for this question.",
+                live.get("error") or "No approved source context is available for this question.",
                 urls=suggested_urls,
                 query=query,
+                response_language=response_language,
             )
 
     sensitive_text = f"{query}\n{context}"
@@ -277,14 +414,16 @@ def ask(query, cloud_consent=False, history=None):
         return _local_chatbot_answer(
             query,
             context,
-            "Cloud LLM processing is off because possible child/minor personal data was detected.",
+            "Possible child/minor personal data was detected.",
+            response_language=response_language,
         )
 
     if not cloud_consent:
         return _local_chatbot_answer(
             query,
             context,
-            "Cloud LLM processing is off because DPDP cloud-processing consent was not granted.",
+            "Verified source data is available, but live AI processing is not enabled.",
+            response_language=response_language,
         )
 
     safe_query = _redact_personal_data(query)
@@ -302,17 +441,18 @@ def ask(query, cloud_consent=False, history=None):
             continue
 
         try:
-            answer = _llm_answer(provider, safe_query, safe_context, history=safe_history)
+            answer = _llm_answer(provider, safe_query, safe_context, history=safe_history, response_language=response_language)
         except Exception:
             continue
 
         if answer:
             if suggested_urls:
-                return answer + _format_urls(suggested_urls)
+                return answer + _format_urls(suggested_urls, _language(query, response_language))
             return answer
 
     return _local_chatbot_answer(
         query,
         context,
-        "No configured cloud LLM responded successfully.",
+        "Live AI response is unavailable, so I am showing verified source guidance.",
+        response_language=response_language,
     )

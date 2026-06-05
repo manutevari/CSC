@@ -22,7 +22,7 @@ def _fallback_urls(query, limit):
         score = sum(1 for term in terms if term and term in url.lower())
         ranked.append((score, url))
 
-    ranked.sort(reverse=True)
+    ranked.sort(key=lambda item: item[0], reverse=True)
     urls = [url for score, url in ranked if score > 0]
     urls.extend([url for _, url in ranked if url not in urls])
 
@@ -41,7 +41,7 @@ def tavily_csc_search(query, max_results=5):
         return {
             "context": "",
             "urls": _fallback_urls(query, max_results),
-            "error": "TAVILY_API_KEY is not configured.",
+            "error": "Live search is not available.",
         }
 
     payload = {

@@ -22,6 +22,7 @@ with st.sidebar:
     )
     st.caption("Live mode uses Tavily for CSC/official service URLs, then Hugging Face/OpenRouter/Grok after redaction.")
     st.caption(f"CSC data guardrail: {allowed_domains_label()}")
+    response_language = st.selectbox("Response language", ["Auto", "English", "Hindi"], index=0)
     if st.button("Clear chat"):
         st.session_state.messages = []
         st.rerun()
@@ -48,7 +49,7 @@ with st.sidebar:
         else:
             st.warning(status)
 
-    st.caption("Try: How do I fill the PAN card form? How do I fill the DigiPay form?")
+    st.caption("Try: Explain all Digital Seva service forms in Class 8 level. How do I fill the PAN card form?")
 
 # Chat history
 for msg in st.session_state.messages:
@@ -70,7 +71,8 @@ if query:
     with st.chat_message("user"):
         st.write(query)
 
-    answer = ask(query, cloud_consent=cloud_consent, history=history)
+    language_map = {"Auto": "auto", "English": "en", "Hindi": "hi"}
+    answer = ask(query, cloud_consent=cloud_consent, history=history, response_language=language_map[response_language])
 
     with st.chat_message("assistant"):
         st.write(answer)
