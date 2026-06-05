@@ -4,6 +4,8 @@ import psycopg2
 import streamlit as st
 from openai import OpenAI
 
+from guardrails import is_allowed_source
+
 
 DB_SECRET_NAMES = ("DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD")
 EMBEDDING_MODEL = "text-embedding-3-small"
@@ -86,6 +88,9 @@ def _embedding(text):
 
 def store_vector(text, source="manual"):
 
+    if not is_allowed_source(source):
+        return False, "Blocked by CSC guardrail. Knowledge source must be an allowed CSC website URL."
+
     emb, error = _embedding(text)
     if error:
         return False, error
@@ -132,12 +137,12 @@ def vector_search(query, top_k=5):
             with conn.cursor() as cursor:
                 cursor.execute(
                     """
-                    SELECT content
+                    SELECT content, source
                     FROM documents
                     ORDER BY embedding <-> %s::vector
                     LIMIT %s
                     """,
-                    (vector, top_k),
+                    (vector, top_k * 8),
                 )
                 rows = cursor.fetchall()
     except psycopg2.Error as exc:
@@ -146,4 +151,7 @@ def vector_search(query, top_k=5):
     finally:
         conn.close()
 
-    return "\n".join([row[0] for row in rows])
+    allowed_rows = [(content, source) for content, source in rows if is_allowed_source(source)]
+    allowed_rows = allowed_rows[:top_k]
+
+    return "\n\n".join([f"Source: {source}\n{content}" for content, source in allowed_rows])

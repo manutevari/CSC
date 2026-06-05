@@ -1,6 +1,7 @@
 import streamlit as st
 from mas_engine import ask
-from knowledge import add_knowledge
+from knowledge import add_knowledge, index_csc_service_guides
+from guardrails import allowed_domains_label
 
 st.set_page_config(page_title="CSC AI Assistant")
 
@@ -20,30 +21,34 @@ with st.sidebar:
         help="When off, questions and retrieved knowledge stay local in this app.",
     )
     st.caption("Full chatbot mode uses Hugging Face first, then OpenRouter, then Grok after redaction.")
+    st.caption(f"CSC data guardrail: {allowed_domains_label()}")
     if st.button("Clear chat"):
         st.session_state.messages = []
         st.rerun()
 
     st.header("Add Knowledge")
 
-    text_input = st.text_area("Paste knowledge")
-    url_input = st.text_input("Paste URL")
+    url_input = st.text_input("Paste CSC website URL")
 
     if st.button("Add Knowledge"):
 
-        if text_input:
-            status = add_knowledge(text_input, cloud_consent=cloud_consent)
-            if cloud_consent and "unavailable" not in status.lower() and "missing" not in status.lower() and "could not" not in status.lower():
-                st.success(status)
-            else:
-                st.warning(status)
-
-        elif url_input:
+        if url_input:
             status = add_knowledge(url_input, cloud_consent=cloud_consent)
             if cloud_consent and "failed" not in status.lower() and "unavailable" not in status.lower() and "missing" not in status.lower():
                 st.success(status)
             else:
                 st.warning(status)
+        else:
+            st.warning("Paste an allowed CSC website URL first.")
+
+    if st.button("Index CSC service guides"):
+        status = index_csc_service_guides(cloud_consent=cloud_consent)
+        if cloud_consent and "failed" not in status.lower() and "not indexed" not in status.lower():
+            st.success(status)
+        else:
+            st.warning(status)
+
+    st.caption("Try: How do I fill the DigiPay form? What details are needed for Tele-Law registration?")
 
 # Chat history
 for msg in st.session_state.messages:

@@ -5,6 +5,7 @@ import requests
 import streamlit as st
 
 from database import vector_search
+from guardrails import allowed_domains_label
 
 
 TRUE_VALUES = {"1", "true", "yes", "on"}
@@ -111,10 +112,18 @@ def _llm_answer(provider, query, context, history=None):
         {
             "role": "system",
             "content": (
-                "You are a helpful CSC AI chatbot. Be conversational, practical, and concise. "
-                "Use retrieved knowledge when it is provided. If no retrieved knowledge is available, "
-                "answer from general CSC/service-center knowledge and clearly say when the user should verify locally. "
-                "Do not ask for Aadhaar, PAN, phone, bank, password, OTP, or child/minor personal data in chat."
+                "You are a CSC guardrailed chatbot. Answer only from retrieved CSC-approved website knowledge. "
+                f"Allowed source domains are: {allowed_domains_label()}. "
+                "Do not use general knowledge, memory, assumptions, or non-CSC sources. "
+                "If the retrieved knowledge does not answer the question, say: "
+                "'I can answer only from approved CSC website data, and this was not found in the indexed CSC data.' "
+                "Do not ask for Aadhaar, PAN, phone, bank, password, OTP, or child/minor personal data in chat. "
+                "For form-filling help, give a VLE-friendly guide with: service/form name, official source URL, "
+                "who can apply if stated, documents/prerequisites if stated, field-by-field filling guidance if stated, "
+                "submission/verification steps if stated, mistakes to avoid, and DPDP privacy notes. "
+                "Tell users to enter personal identifiers only inside the official CSC/service portal, not in this chat. "
+                "If the source text does not contain a field, document, fee, eligibility rule, or step, say it is not found in the indexed CSC data. "
+                "Conversation history is only for continuity; it is not evidence."
             ),
         },
     ]
@@ -127,9 +136,9 @@ def _llm_answer(provider, query, context, history=None):
 
     user_content = f"Question:\n{query}"
     if context:
-        user_content += f"\n\nRetrieved knowledge:\n{context}"
+        user_content += f"\n\nRetrieved CSC-approved knowledge:\n{context}"
     else:
-        user_content += "\n\nRetrieved knowledge: none available."
+        user_content += "\n\nRetrieved CSC-approved knowledge: none available."
 
     messages.append({"role": "user", "content": user_content})
     payload = {
@@ -161,32 +170,54 @@ def _llm_answer(provider, query, context, history=None):
         return ""
 
 
+def _guardrail_refusal(reason):
+
+    return (
+        "I can answer only from approved CSC website data, and this was not found in the indexed CSC data.\n\n"
+        f"{reason}\n\n"
+        f"Allowed domains: {allowed_domains_label()}."
+    )
+
+
 def _local_chatbot_answer(query, context, reason):
 
     if context:
-        return f"""I found this saved knowledge and can use it locally:
+        return f"""I found approved CSC website data and will stay in local privacy mode.
 
+Use the source text below to fill the service form. For DPDP safety, do not paste Aadhaar, PAN, bank details, OTP, passwords, or child/minor personal data in this chat. Enter those only inside the official CSC/service portal.
+
+Form-filling checklist:
+1. Confirm the exact CSC service/form name from the source.
+2. Check eligibility, documents, fee, and prerequisites in the source.
+3. Fill only fields that the official form asks for.
+4. Match names, dates, IDs, and contact details with the applicant's official documents.
+5. Review consent, declaration, payment, and final submission status on the official portal.
+6. If any required field or document is not visible in the source, verify it on the official CSC portal before submission.
+
+Retrieved CSC source text:
 {context}
 
 {reason}
 """
 
     setup_hint = (
-        "To enable full AI chat, add `HF_TOKEN` in Streamlit secrets and turn on `Allow cloud AI processing`. "
-        "OpenRouter and Grok are still fallbacks if their keys are configured."
+        "Add an allowed CSC URL in the sidebar first. Then enable cloud processing only if DPDP consent is available."
     )
 
     return (
-        "I am running in DPDP privacy-safe local mode right now, so I will not send this chat to a cloud LLM. "
+        "I am running in CSC guardrail mode and will not use non-CSC data. "
         f"{reason}\n\n"
         f"{setup_hint}\n\n"
-        "You can ask me about CSC app setup, privacy settings, knowledge upload, database configuration, or deployment troubleshooting."
+        f"Allowed domains: {allowed_domains_label()}."
     )
 
 
 def ask(query, cloud_consent=False, history=None):
 
     context = vector_search(query)
+
+    if not context:
+        return _guardrail_refusal("No approved CSC website context is currently available for this question.")
 
     sensitive_text = f"{query}\n{context}"
 

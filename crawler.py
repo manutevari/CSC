@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
+
+from guardrails import is_allowed_url
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
@@ -25,12 +27,13 @@ def clean_text(soup):
 
 def crawl_website(start_url, max_pages=5):
 
+    if not is_allowed_url(start_url):
+        return []
+
     visited = set()
     to_visit = [start_url]
 
     pages = []
-
-    domain = urlparse(start_url).netloc
 
     while to_visit and len(pages) < max_pages:
 
@@ -54,6 +57,9 @@ def crawl_website(start_url, max_pages=5):
             if "text/html" not in r.headers.get("Content-Type",""):
                 continue
 
+            if not is_allowed_url(r.url):
+                continue
+
             soup = BeautifulSoup(r.text, "html.parser")
 
             content = clean_text(soup)
@@ -67,9 +73,8 @@ def crawl_website(start_url, max_pages=5):
             for link in soup.find_all("a", href=True):
 
                 absolute = urljoin(url, link["href"])
-                link_domain = urlparse(absolute).netloc
 
-                if domain in link_domain and absolute not in visited:
+                if is_allowed_url(absolute) and absolute not in visited:
                     to_visit.append(absolute)
 
         except Exception as e:

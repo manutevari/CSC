@@ -1,0 +1,43 @@
+CSC_SERVICE_URLS = (
+    "https://csc.gov.in/",
+    "https://digitalseva.csc.gov.in/",
+    "https://digitalseva.csc.gov.in/web/services",
+    "https://register.csc.gov.in/",
+    "https://cscregister.csccloud.in/",
+    "https://digipay.csccloud.in/",
+    "https://www.diginame.in/",
+    "https://www.pmgdisha.in/",
+    "https://www.culturemap.in/",
+    "https://cschealth.in/",
+    "https://cscbankmitra.in/",
+    "https://cscestore.in/",
+    "https://www.tele-law.in/",
+    "https://www.cscagri.in/",
+    "https://eseva.csccloud.in/",
+    "https://www.cscacademy.org/",
+    "https://www.cscbalvidyalaya.com/",
+    "https://digipaathshala.cscacademy.org/",
+    "https://skill.csc-services.in/",
+    "https://cscsafar.in/",
+    "https://dakmitra.csccloud.in/",
+    "https://www.wifichoupal.in/",
+    "https://cscolympiad.com/",
+    "https://www.digital-village.in/",
+    "https://cscudaanacademy.in/",
+    "https://www.cscentrepreneur.in/",
+    "https://insurance.csccloud.in/",
+    "https://cscgraminnaukri.in/",
+    "https://cscgjsp.in/",
+    "https://www.cscdigisign.in/",
+    "https://services.csccloud.in/",
+    "https://locator.csccloud.in/",
+    "https://jaankari.csccloud.in/important-websites.html",
+    "https://support.csc.gov.in/",
+    "https://connect.csc.gov.in/",
+    "https://developer.csccloud.in/",
+)
+
+
+def service_urls():
+
+    return list(CSC_SERVICE_URLS)
