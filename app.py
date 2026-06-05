@@ -16,11 +16,11 @@ with st.sidebar:
 
     st.header("Privacy")
     cloud_consent = st.checkbox(
-        "Allow cloud AI processing for chatbot",
+        "Allow Tavily search and cloud AI for chatbot",
         value=False,
-        help="When off, questions and retrieved knowledge stay local in this app.",
+        help="When off, questions stay local and only the built-in CSC URL catalog is suggested.",
     )
-    st.caption("Full chatbot mode uses Hugging Face first, then OpenRouter, then Grok after redaction.")
+    st.caption("Live mode uses Tavily for CSC/official service URLs, then Hugging Face/OpenRouter/Grok after redaction.")
     st.caption(f"CSC data guardrail: {allowed_domains_label()}")
     if st.button("Clear chat"):
         st.session_state.messages = []
@@ -28,7 +28,7 @@ with st.sidebar:
 
     st.header("Add Knowledge")
 
-    url_input = st.text_input("Paste CSC website URL")
+    url_input = st.text_input("Paste CSC or official service URL")
 
     if st.button("Add Knowledge"):
 
@@ -39,7 +39,7 @@ with st.sidebar:
             else:
                 st.warning(status)
         else:
-            st.warning("Paste an allowed CSC website URL first.")
+            st.warning("Paste an allowed CSC or official service URL first.")
 
     if st.button("Index CSC service guides"):
         status = index_csc_service_guides(cloud_consent=cloud_consent)
@@ -48,7 +48,7 @@ with st.sidebar:
         else:
             st.warning(status)
 
-    st.caption("Try: How do I fill the DigiPay form? What details are needed for Tele-Law registration?")
+    st.caption("Try: How do I fill the PAN card form? How do I fill the DigiPay form?")
 
 # Chat history
 for msg in st.session_state.messages:

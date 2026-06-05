@@ -42,6 +42,14 @@ DEFAULT_ALLOWED_DOMAINS = (
     "connect.csc.gov.in",
     "developer.csccloud.in",
     "cscprod.my.site.com",
+    "incometax.gov.in",
+    "eportal.incometax.gov.in",
+    "protean-tinpan.com",
+    "tinpan.proteantech.in",
+    "proteantech.in",
+    "onlineservices.nsdl.com",
+    "pan.utiitsl.com",
+    "utiitsl.com",
 )
 
 
