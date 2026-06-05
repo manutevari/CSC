@@ -15,11 +15,11 @@ with st.sidebar:
 
     st.header("Privacy")
     cloud_consent = st.checkbox(
-        "Allow cloud AI processing",
+        "Allow cloud AI processing for chatbot",
         value=False,
         help="When off, questions and retrieved knowledge stay local in this app.",
     )
-    st.caption("Cloud AI uses Hugging Face first, then OpenRouter, then Grok after redaction.")
+    st.caption("Full chatbot mode uses Hugging Face first, then OpenRouter, then Grok after redaction.")
     if st.button("Clear chat"):
         st.session_state.messages = []
         st.rerun()
@@ -55,6 +55,8 @@ query = st.chat_input("Ask CSC related question")
 
 if query:
 
+    history = st.session_state.messages[-8:]
+
     st.session_state.messages.append({
         "role": "user",
         "content": query
@@ -63,7 +65,7 @@ if query:
     with st.chat_message("user"):
         st.write(query)
 
-    answer = ask(query, cloud_consent=cloud_consent)
+    answer = ask(query, cloud_consent=cloud_consent, history=history)
 
     with st.chat_message("assistant"):
         st.write(answer)
