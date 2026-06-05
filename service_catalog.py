@@ -1,3 +1,6 @@
+import re
+
+
 CSC_SERVICE_URLS = (
     "https://csc.gov.in/",
     "https://digitalseva.csc.gov.in/",
@@ -39,9 +42,128 @@ CSC_SERVICE_URLS = (
     "https://www.protean-tinpan.com/services/pan/pan-index.html",
     "https://www.pan.utiitsl.com/PAN/",
     "https://tax2win.in/",
+    "https://foscos.fssai.gov.in/",
+    "https://www.fssai.gov.in/",
+    "https://www.gst.gov.in/",
+    "https://services.gst.gov.in/services/login",
+    "https://www.passportindia.gov.in/",
+    "https://portal2.passportindia.gov.in/",
+    "https://www.pmjay.gov.in/",
+    "https://beneficiary.nha.gov.in/",
+    "https://services.india.gov.in/",
+)
+
+
+OFFICIAL_URL_TABLE = (
+    {
+        "service": "CSC Digital Seva Services",
+        "url": "https://digitalseva.csc.gov.in/web/services",
+        "keywords": ("digital seva", "digitalseva", "csc service", "csc services", "all forms", "portal services"),
+    },
+    {
+        "service": "DigiPay",
+        "url": "https://digipay.csccloud.in/",
+        "keywords": ("digipay", "aeps", "cash withdrawal", "micro atm"),
+    },
+    {
+        "service": "PMGDISHA",
+        "url": "https://www.pmgdisha.in/",
+        "keywords": ("pmgdisha", "digital literacy"),
+    },
+    {
+        "service": "Tele-Law",
+        "url": "https://www.tele-law.in/",
+        "keywords": ("tele-law", "tele law", "legal"),
+    },
+    {
+        "service": "CSC Health",
+        "url": "https://cschealth.in/",
+        "keywords": ("health", "telemedicine", "doctor", "jan aushadhi", "ayushman"),
+    },
+    {
+        "service": "CSC Agriculture",
+        "url": "https://www.cscagri.in/",
+        "keywords": ("agriculture", "farmer", "crop", "agri"),
+    },
+    {
+        "service": "CSC Academy",
+        "url": "https://www.cscacademy.org/",
+        "keywords": ("education", "academy", "course", "training", "skill", "skills"),
+    },
+    {
+        "service": "CSC Travel",
+        "url": "https://cscsafar.in/",
+        "keywords": ("travel", "bus", "flight", "ticket", "darshan"),
+    },
+    {
+        "service": "CSC Insurance",
+        "url": "https://insurance.csccloud.in/",
+        "keywords": ("insurance", "bima", "policy", "fasal bima"),
+    },
+    {
+        "service": "PAN Services",
+        "url": "https://www.protean-tinpan.com/services/pan/pan-index.html",
+        "keywords": ("pan", "pan card", "pancard", "49a", "49aa"),
+    },
+    {
+        "service": "Income Tax Services",
+        "url": "https://www.incometax.gov.in/",
+        "keywords": ("income tax", "itr", "tax return", "tax filing", "tax2win"),
+    },
+    {
+        "service": "FSSAI Services",
+        "url": "https://foscos.fssai.gov.in/",
+        "keywords": ("fssai", "foscos", "food license", "food registration"),
+    },
+    {
+        "service": "GST Services",
+        "url": "https://www.gst.gov.in/",
+        "keywords": ("gst", "gstin", "goods and services tax"),
+    },
+    {
+        "service": "Passport Services",
+        "url": "https://www.passportindia.gov.in/",
+        "keywords": ("passport", "passport seva", "psk", "popsk"),
+    },
+    {
+        "service": "Ayushman Bharat / PM-JAY",
+        "url": "https://www.pmjay.gov.in/",
+        "keywords": ("ayushman", "pmjay", "pm-jay", "abha", "beneficiary nha"),
+    },
+    {
+        "service": "Government Services",
+        "url": "https://services.india.gov.in/",
+        "keywords": ("government", "edistrict", "certificate", "birth", "death", "ration", "scheme"),
+    },
 )
 
 
 def service_urls():
 
     return list(CSC_SERVICE_URLS)
+
+
+def official_urls_for_query(query, max_results=5):
+
+    text = (query or "").lower()
+    matches = []
+
+    for item in OFFICIAL_URL_TABLE:
+        score = sum(1 for keyword in item["keywords"] if _keyword_matches(text, keyword))
+        if score:
+            matches.append((score, item["url"]))
+
+    matches.sort(key=lambda item: item[0], reverse=True)
+
+    urls = []
+    for _, url in matches:
+        if url not in urls:
+            urls.append(url)
+
+    return urls[:max_results]
+
+
+def _keyword_matches(text, keyword):
+
+    pattern = r"(?<![a-z0-9])" + re.escape(keyword.lower()) + r"(?![a-z0-9])"
+    return bool(re.search(pattern, text))

@@ -47,7 +47,7 @@ with st.sidebar:
         else:
             st.warning(status)
 
-    st.caption("Try: How to use Aadhaar service in DSP? How to track PAN status? Explain all CSC forms with DSP navigation and common errors.")
+    st.caption("Try: What is DigiPay? DigiPay device error? FSSAI documents? Compare PAN reprint vs correction. How to use Ayushman service?")
 
 # Chat history
 for msg in st.session_state.messages:

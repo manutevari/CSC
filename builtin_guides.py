@@ -1,3 +1,8 @@
+import re
+
+from adaptive_response import profile_context
+
+
 PAN_GUIDE_CONTEXT = """Source: https://www.incometax.gov.in/iec/foportal/help/all-topics/instant-e-pan/faq
 Source: https://www.protean-tinpan.com/services/pan/pan-index.html
 Source: https://www.pan.utiitsl.com/PAN/
@@ -156,6 +161,278 @@ Class 8 level guide: Digital Seva में कोई भी service form कै
 Important limitation: Digital Seva services page services और categories बताता है, लेकिन exact fields, fee, eligibility और document list हर service में अलग हो सकती है। अगर कोई field/document indexed official source में नहीं है, तो final submission से पहले official Digital Seva/service portal में verify करें।
 
 DPDP note: केवल service के लिए जरूरी data collect करें, consent साफ बताएं, documents सुरक्षित रखें, और unnecessary personal data store/share न करें."""
+
+
+def _dsp_enhancement_context(service_title, language="en"):
+
+    if language == "hi":
+        return f"""Who Can Use:
+Authorized CSC/VLE account या वह role जिसे Digital Seva Portal में यह service enabled दिखती है। Exact access role portal में service के अंदर दिखता है।
+
+Prerequisites:
+- Active Digital Seva Portal login.
+- Citizen consent before entering personal details.
+- Required documents and payment method ready if the official service asks.
+- Working biometric/device/OTP flow only when the service requires it.
+
+DSP Navigation:
+1. Digital Seva Portal login page खोलें।
+2. Authorized CSC/VLE credentials से login करें।
+3. Service search या category list में {service_title} से related exact service खोजें।
+4. Service instructions, role access, fee, documents और consent/declaration पढ़ें।
+5. अगर portal official department/provider page पर redirect करता है, तो आगे की entry केवल उसी official page पर करें।
+
+Form Filling Guide:
+1. Service name और citizen की जरूरत match करें।
+2. Citizen details official documents के अनुसार भरें।
+3. Aadhaar, PAN, bank details, OTP, health या child/minor data केवल official portal field में भरें, chat में नहीं।
+4. Required dropdown, category, location, date, mobile और address fields सावधानी से भरें।
+5. Documents केवल portal में मांगे गए format, size और type में upload करें।
+6. Submit से पहले spelling, numbers, document upload, fee, consent और declaration check करें।
+
+Application Workflow:
+1. Draft/details review करें।
+2. Validate/verify button हो तो use करें।
+3. Payment required हो तो official portal/payment page पर pay करें।
+4. Submit के बाद application number, acknowledgement, receipt या transaction ID save करें।
+
+Status Tracking:
+Application/reference/receipt number से same DSP service, status option, official department portal या helpdesk पर status track करें, जैसा portal में दिखे।
+
+Approval Process:
+Approval department/provider workflow पर depend करता है। Timeline या approval guarantee तभी बताएं जब official portal/SOP में साफ लिखा हो।
+
+Download / Print:
+Submission या approval के बाद receipt, acknowledgement, certificate, ticket, policy, order या form download/print option portal में दिखे तो use करें।
+
+Common Errors:
+- Service not enabled for role/location: VLE authorization, state, category और service availability check करें।
+- Required field missing: लाल/mandatory field complete करें।
+- Invalid document/file: correct document type, clear scan/photo और allowed size upload करें।
+- Name/date/address mismatch: citizen document के साथ match करें।
+- Payment pending/failed: transaction status check करें; duplicate payment blindly न करें।
+- OTP/biometric/device failure: OTP share न करें; official portal/device screen पर retry करें।"""
+
+    return f"""Who Can Use:
+Authorized CSC/VLE account or the role for which this service is enabled inside the Digital Seva Portal. Exact access role is shown inside the portal/service.
+
+Prerequisites:
+- Active Digital Seva Portal login.
+- Citizen consent before entering personal details.
+- Required documents and payment method ready if the official service asks.
+- Working biometric/device/OTP flow only when the service requires it.
+
+DSP Navigation:
+1. Open the Digital Seva Portal login page.
+2. Login with authorized CSC/VLE credentials.
+3. Use service search or the category list to find the exact service related to {service_title}.
+4. Read service instructions, role access, fee, documents, and consent/declaration.
+5. If the portal redirects to an official department/provider page, continue only on that official page.
+
+Form Filling Guide:
+1. Match the service name with the citizen's need.
+2. Fill citizen details exactly as shown in official documents.
+3. Enter Aadhaar, PAN, bank details, OTP, health, or child/minor data only in the official portal field, not in chat.
+4. Fill required dropdowns, category, location, date, mobile, and address fields carefully.
+5. Upload documents only in the format, size, and type asked by the portal.
+6. Before submit, check spelling, numbers, document upload, fee, consent, and declaration.
+
+Application Workflow:
+1. Review draft/details.
+2. Use Validate/Verify if the service shows that button.
+3. Pay fee only on the official portal/payment page if required.
+4. After submission, save application number, acknowledgement, receipt, or transaction ID.
+
+Status Tracking:
+Track status with the application/reference/receipt number in the same DSP service, status option, official department portal, or helpdesk as shown by the portal.
+
+Approval Process:
+Approval depends on the department/provider workflow. Do not promise timeline or approval unless the official portal/SOP clearly states it.
+
+Download / Print:
+After submission or approval, use the receipt, acknowledgement, certificate, ticket, policy, order, or form download/print option if the portal shows it.
+
+Common Errors:
+- Service not enabled for role/location: check VLE authorization, state, category, and service availability.
+- Required field missing: complete the red/mandatory field.
+- Invalid document/file: upload the correct document type, clear scan/photo, and allowed file size.
+- Name/date/address mismatch: match details with citizen documents.
+- Payment pending/failed: check transaction status; do not make duplicate payment blindly.
+- OTP/biometric/device failure: do not share OTP; retry only on the official portal/device screen."""
+
+
+PAN_DSP_CONTEXT = """Who Can Use:
+Citizen/entity applying through an authorized CSC/VLE account or official PAN service portal flow.
+
+Prerequisites:
+- Correct PAN service choice: new PAN, correction/change, reprint/reissue, or e-PAN if available.
+- Proof of identity, proof of address, and proof of date of birth as applicable.
+- Citizen consent, photo/signature, and payment method if required.
+
+DSP Navigation:
+1. Login to Digital Seva Portal with authorized CSC/VLE credentials.
+2. Search/select PAN service if it is enabled in the account.
+3. Choose new PAN, correction/change, reprint/reissue, or e-PAN as required.
+4. If redirected to Protean/UTIITSL/Income Tax official PAN page, continue only on that official page.
+
+Form Filling Guide:
+1. Select applicant category and correct form/mode shown by the official PAN portal.
+2. Fill name, date of birth/incorporation, gender, parent name, address, mobile/email, photo, and signature as required.
+3. Enter Aadhaar/PAN/contact/document numbers only inside the official PAN portal.
+4. Upload/submit identity, address, and date-of-birth proof as required.
+5. Review declaration, consent, fee/payment, and acknowledgement before final submit.
+
+Application Workflow:
+1. Complete the form on the official PAN flow.
+2. Validate details and upload documents.
+3. Pay fee if required.
+4. Submit and save acknowledgement/receipt.
+
+Status Tracking:
+Track status using the acknowledgement/reference number on the official PAN/service portal.
+
+Download / Print:
+Download/print acknowledgement, receipt, e-PAN, or submitted form only when the official portal provides the option.
+
+Common Errors:
+- Name mismatch: match the proof document exactly.
+- Wrong applicant category: correct category before submission.
+- Invalid photo/signature/document: upload as per portal requirement.
+- Payment failed: check official payment/transaction status before retrying.
+
+Comparison:
+- PAN correction/change is used when existing PAN details need correction or update.
+- PAN reprint/reissue is used when PAN card copy is needed again and PAN data is not being changed.
+- New PAN is for an applicant who does not already have PAN.
+- Select the option shown by the official PAN portal and citizen requirement before payment/submission."""
+
+
+PAN_DSP_CONTEXT_HI = """Who Can Use:
+Authorized CSC/VLE account या official PAN service portal flow से apply करने वाला citizen/entity.
+
+Prerequisites:
+- सही PAN service choice: new PAN, correction/change, reprint/reissue, या e-PAN अगर available हो।
+- Proof of identity, proof of address और proof of date of birth, जैसा applicable हो।
+- Citizen consent, photo/signature और payment method अगर required हो।
+
+DSP Navigation:
+1. Authorized CSC/VLE credentials से Digital Seva Portal login करें।
+2. Account में enabled हो तो PAN service search/select करें।
+3. जरूरत के अनुसार new PAN, correction/change, reprint/reissue या e-PAN चुनें।
+4. Protean/UTIITSL/Income Tax official PAN page पर redirect हो तो entry केवल उसी official page पर करें।
+
+Form Filling Guide:
+1. Official PAN portal में applicant category और सही form/mode चुनें।
+2. Name, date of birth/incorporation, gender, parent name, address, mobile/email, photo और signature required अनुसार भरें।
+3. Aadhaar/PAN/contact/document numbers केवल official PAN portal में भरें।
+4. Identity, address और date-of-birth proof required अनुसार upload/submit करें।
+5. Final submit से पहले declaration, consent, fee/payment और acknowledgement check करें।
+
+Application Workflow:
+1. Official PAN flow पर form complete करें।
+2. Details validate करें और documents upload करें।
+3. Required हो तो fee pay करें।
+4. Submit करके acknowledgement/receipt save करें।
+
+Status Tracking:
+Official PAN/service portal पर acknowledgement/reference number से status track करें।
+
+Download / Print:
+Official portal option दे तो acknowledgement, receipt, e-PAN या submitted form download/print करें।
+
+Common Errors:
+- Name mismatch: proof document से exact match करें।
+- Wrong applicant category: submission से पहले correct category चुनें।
+- Invalid photo/signature/document: portal requirement के अनुसार upload करें।
+- Payment failed: retry से पहले official transaction status check करें।
+
+Comparison:
+- PAN correction/change तब use करें जब existing PAN details में correction/update चाहिए।
+- PAN reprint/reissue तब use करें जब PAN card copy फिर चाहिए और PAN data change नहीं करना है।
+- New PAN उस applicant के लिए है जिसके पास पहले से PAN नहीं है।
+- Payment/submission से पहले official PAN portal में दिखा option और citizen requirement match करें।"""
+
+
+TAX_DSP_CONTEXT = """Who Can Use:
+Citizen filing income tax return through an authorized tax filing service or official Income Tax portal flow.
+
+Prerequisites:
+- Correct financial year/assessment year.
+- PAN, Aadhaar if required by the official portal, Form 16, AIS/TIS, Form 26AS, income proofs, bank details, and deduction proofs as applicable.
+- Citizen consent and access to official e-verification method if required.
+
+DSP Navigation:
+1. Login to Digital Seva Portal with authorized credentials if using a CSC-enabled tax service.
+2. Search/select the income tax/ITR/tax filing service if enabled.
+3. If redirected to Tax2Win or Income Tax official portal, continue only on that official page.
+4. Select the correct tax filing service/year shown by the official portal.
+
+Form Filling Guide:
+1. Select financial year/assessment year.
+2. Select ITR type only as guided by the official portal or tax expert.
+3. Fill personal, income, tax paid/TDS, deduction, bank, and declaration details from official records.
+4. Do not enter PAN, Aadhaar, password, OTP, or bank details in chat.
+5. Review tax payable/refund, declaration, consent, and final summary before submit.
+
+Application Workflow:
+1. Prepare documents.
+2. Fill return on the official tax flow.
+3. Submit only after citizen confirms.
+4. Complete e-verification if required.
+5. Save acknowledgement/ITR-V/reference number.
+
+Status Tracking:
+Track return, refund, or e-verification status only on the official tax/service portal.
+
+Download / Print:
+Download/print acknowledgement, ITR-V, computation, or filed return only from the official portal if available.
+
+Common Errors:
+- Wrong year or ITR type: verify before filing.
+- TDS mismatch: check Form 26AS/AIS/TIS.
+- Fake/unsupported deduction: use only valid proof.
+- E-verification pending: complete it on the official portal."""
+
+
+TAX_DSP_CONTEXT_HI = """Who Can Use:
+Authorized tax filing service या official Income Tax portal flow से ITR file करने वाला citizen.
+
+Prerequisites:
+- सही financial year/assessment year.
+- PAN, Aadhaar अगर official portal मांगे, Form 16, AIS/TIS, Form 26AS, income proofs, bank details और deduction proofs जैसा applicable हो।
+- Citizen consent और required हो तो official e-verification access.
+
+DSP Navigation:
+1. CSC-enabled tax service use कर रहे हैं तो authorized credentials से Digital Seva Portal login करें।
+2. Enabled हो तो income tax/ITR/tax filing service search/select करें।
+3. Tax2Win या Income Tax official portal पर redirect हो तो entry केवल उसी official page पर करें।
+4. Official portal में सही tax filing service/year चुनें।
+
+Form Filling Guide:
+1. Financial year/assessment year चुनें।
+2. ITR type केवल official portal या tax expert guidance के अनुसार चुनें।
+3. Personal, income, tax paid/TDS, deduction, bank और declaration details official records से भरें।
+4. PAN, Aadhaar, password, OTP या bank details chat में न डालें।
+5. Submit से पहले tax payable/refund, declaration, consent और final summary review करें।
+
+Application Workflow:
+1. Documents तैयार करें।
+2. Official tax flow पर return भरें।
+3. Citizen confirmation के बाद submit करें।
+4. Required हो तो e-verification पूरा करें।
+5. Acknowledgement/ITR-V/reference number save करें।
+
+Status Tracking:
+Return, refund या e-verification status केवल official tax/service portal पर track करें।
+
+Download / Print:
+Official portal available कराए तो acknowledgement, ITR-V, computation या filed return download/print करें।
+
+Common Errors:
+- Wrong year या ITR type: filing से पहले verify करें।
+- TDS mismatch: Form 26AS/AIS/TIS check करें।
+- Fake/unsupported deduction: केवल valid proof use करें।
+- E-verification pending: official portal पर पूरा करें।"""
 
 
 DIGITAL_SEVA_CATEGORY_GUIDES_EN = {
@@ -575,7 +852,9 @@ Class 8 level guide: {data["title"]} form कैसे भरें:
 
 Important limitation: Digital Seva services page category और example services बताता है। Exact field names, fee, eligibility और document list हर service में अलग हो सकती है। अगर exact detail indexed/official source में नहीं है, तो final submission से पहले official Digital Seva/service portal में verify करें।
 
-DPDP note: Aadhaar, PAN, bank details, OTP, password, health data या child/minor personal data इस chat में न डालें। ऐसी जानकारी केवल official CSC/service portal में भरें।"""
+DPDP note: Aadhaar, PAN, bank details, OTP, password, health data या child/minor personal data इस chat में न डालें। ऐसी जानकारी केवल official CSC/service portal में भरें।
+
+{_dsp_enhancement_context(data["title"], "hi")}"""
 
     data = DIGITAL_SEVA_CATEGORY_GUIDES_EN[category]
     examples = "\n".join(f"- {item}" for item in data["examples"])
@@ -591,7 +870,9 @@ Class 8 level guide to fill {data["title"]} forms:
 
 Important limitation: The Digital Seva services page confirms the category and example services. Exact field names, fee, eligibility, and document list can be different for each service. If exact details are not available from indexed/official source data, verify them inside the official Digital Seva/service portal before final submission.
 
-DPDP note: Do not paste Aadhaar, PAN, bank details, OTP, passwords, health data, or child/minor personal data in this chat. Enter those only inside the official CSC/service portal."""
+DPDP note: Do not paste Aadhaar, PAN, bank details, OTP, passwords, health data, or child/minor personal data in this chat. Enter those only inside the official CSC/service portal.
+
+{_dsp_enhancement_context(data["title"], "en")}"""
 
 
 def _category_summary(language="en"):
@@ -621,19 +902,28 @@ def _category_summary(language="en"):
 def _digital_seva_context(language="en"):
 
     if language == "hi":
-        return f"{DIGITAL_SEVA_SERVICES_CONTEXT_HI}\n\n{_category_summary('hi')}"
+        return f"{DIGITAL_SEVA_SERVICES_CONTEXT_HI}\n\n{_category_summary('hi')}\n\n{_dsp_enhancement_context('Digital Seva Portal services', 'hi')}"
 
-    return f"{DIGITAL_SEVA_SERVICES_CONTEXT}\n\n{_category_summary('en')}"
+    return f"{DIGITAL_SEVA_SERVICES_CONTEXT}\n\n{_category_summary('en')}\n\n{_dsp_enhancement_context('Digital Seva Portal services', 'en')}"
 
 
 def _matching_category(normalized, query):
 
     haystack = f" {normalized} {(query or '').lower()} "
     for category, terms in DIGITAL_SEVA_CATEGORY_KEYWORDS:
-        if any(term in haystack for term in terms):
+        if any(_term_matches(haystack, term) for term in terms):
             return category
 
     return ""
+
+
+def _term_matches(haystack, term):
+
+    if any(ord(char) > 127 for char in term):
+        return term in haystack
+
+    pattern = r"(?<![a-z0-9])" + re.escape(term) + r"(?![a-z0-9])"
+    return bool(re.search(pattern, haystack))
 
 
 def builtin_service_context(query, language="en"):
@@ -646,10 +936,15 @@ def builtin_service_context(query, language="en"):
         .replace("guidence", "guidance")
         .replace("from", "form")
     )
+
+    profile = profile_context(query, language=language)
+    if profile:
+        return profile
+
     if "pan card" in text or "pancard" in text or text.strip() == "pan" or " pan " in f" {text} " or "पैन" in text:
         if language == "hi":
-            return PAN_GUIDE_CONTEXT_HI
-        return PAN_GUIDE_CONTEXT
+            return f"{PAN_GUIDE_CONTEXT_HI}\n\n{PAN_DSP_CONTEXT_HI}"
+        return f"{PAN_GUIDE_CONTEXT}\n\n{PAN_DSP_CONTEXT}"
     tax2win_terms = (
         "tax2win",
         "tax to win",
@@ -665,8 +960,8 @@ def builtin_service_context(query, language="en"):
     tax2win_terms_hi = ("इनकम टैक्स", "आईटीआर", "आयकर", "टैक्स रिटर्न", "टैक्स फाइल")
     if any(term in normalized for term in tax2win_terms) or any(term in query for term in tax2win_terms_hi):
         if language == "hi":
-            return TAX2WIN_GUIDE_CONTEXT_HI
-        return TAX2WIN_GUIDE_CONTEXT
+            return f"{TAX2WIN_GUIDE_CONTEXT_HI}\n\n{TAX_DSP_CONTEXT_HI}"
+        return f"{TAX2WIN_GUIDE_CONTEXT}\n\n{TAX_DSP_CONTEXT}"
 
     category = _matching_category(normalized, query)
     if category:
@@ -685,18 +980,28 @@ def builtin_service_context(query, language="en"):
         "fill all forms",
         "all service",
         "all services",
-        "service form",
-        "service forms",
-        "filling",
-        "guidance",
         "forms available",
         "portal services",
-        "class 8",
-        "8th",
-        "8th class",
     )
-    digital_seva_terms_hi = ("डिजिटल सेवा", "सभी फॉर्म", "सभी सेव", "फॉर्म कैसे", "आठवीं", "8वीं")
-    generic_form_intent = ("fill" in normalized and "form" in normalized) or "filling" in normalized or "guidance" in normalized
+    digital_seva_terms_hi = ("डिजिटल सेवा", "सीएससी", "सभी फॉर्म", "सभी सेव")
+    generic_form_terms_hi = ("फॉर्म कैसे", "आठवीं", "8वीं")
+    csc_scope = (
+        "csc" in normalized
+        or "digital seva" in normalized
+        or "digitalseva" in normalized
+        or "portal services" in normalized
+        or "all form" in normalized
+        or "all service" in normalized
+        or any(term in query for term in digital_seva_terms_hi)
+    )
+    generic_form_intent = (
+        ("fill" in normalized and "form" in normalized)
+        or "filling" in normalized
+        or "guidance" in normalized
+        or "class 8" in normalized
+        or "8th" in normalized
+        or any(term in query for term in generic_form_terms_hi)
+    ) and csc_scope
     if any(term in normalized for term in digital_seva_terms) or any(term in query for term in digital_seva_terms_hi) or generic_form_intent:
         return _digital_seva_context(language=language)
 

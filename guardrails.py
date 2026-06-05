@@ -51,6 +51,16 @@ DEFAULT_ALLOWED_DOMAINS = (
     "pan.utiitsl.com",
     "utiitsl.com",
     "tax2win.in",
+    "fssai.gov.in",
+    "foscos.fssai.gov.in",
+    "gst.gov.in",
+    "services.gst.gov.in",
+    "passportindia.gov.in",
+    "portal2.passportindia.gov.in",
+    "pmjay.gov.in",
+    "nha.gov.in",
+    "beneficiary.nha.gov.in",
+    "services.india.gov.in",
 )
 
 

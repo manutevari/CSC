@@ -9,6 +9,30 @@ from guardrails import is_allowed_source
 
 DB_SECRET_NAMES = ("DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD")
 EMBEDDING_MODEL = "text-embedding-3-small"
+STRUCTURED_COLUMNS = (
+    "service_name",
+    "category",
+    "purpose",
+    "eligibility",
+    "prerequisites",
+    "fee_information",
+    "required_documents",
+    "dsp_navigation",
+    "form_filling_steps",
+    "validation_rules",
+    "upload_requirements",
+    "workflow",
+    "status_tracking",
+    "approval_process",
+    "download_print_process",
+    "common_errors",
+    "policies_circulars",
+    "comparison",
+    "faq",
+    "official_url",
+    "official_helpdesk",
+    "official_tracking_url",
+)
 
 
 def _secret(name, default=""):
@@ -120,6 +144,70 @@ def store_vector(text, source="manual"):
     return True, "Knowledge added successfully"
 
 
+def _structured_block(row):
+
+    data = dict(zip(STRUCTURED_COLUMNS, row))
+    official_url = (data.get("official_url") or "").strip()
+    if not is_allowed_source(official_url):
+        return ""
+
+    labels = (
+        ("service_name", "Service/form"),
+        ("category", "Category"),
+        ("purpose", "Purpose"),
+        ("eligibility", "Who Can Use"),
+        ("prerequisites", "Prerequisites"),
+        ("fee_information", "Fee Information"),
+        ("required_documents", "Required Documents"),
+        ("dsp_navigation", "DSP Navigation"),
+        ("form_filling_steps", "Form Filling Guide"),
+        ("validation_rules", "Common Validation Rules"),
+        ("upload_requirements", "Upload Requirements"),
+        ("workflow", "Application Workflow"),
+        ("status_tracking", "Status Tracking"),
+        ("approval_process", "Approval Process"),
+        ("download_print_process", "Download / Print"),
+        ("common_errors", "Common Errors"),
+        ("policies_circulars", "Policies & Circulars"),
+        ("comparison", "Comparison"),
+        ("faq", "Important Notes"),
+        ("official_helpdesk", "Official Helpdesk"),
+        ("official_tracking_url", "Official Tracking Page"),
+    )
+    lines = [f"Source: {official_url}"]
+
+    for key, label in labels:
+        value = (data.get(key) or "").strip()
+        if value:
+            lines.append(f"{label}:\n{value}")
+
+    return "\n".join(lines)
+
+
+def _structured_search(cursor, vector, top_k):
+
+    cursor.execute(
+        """
+        SELECT service_name, category, purpose, eligibility, prerequisites,
+               fee_information, required_documents, dsp_navigation,
+               form_filling_steps, validation_rules, upload_requirements,
+               workflow, status_tracking, approval_process, download_print_process,
+               common_errors, policies_circulars, comparison, faq, official_url,
+               official_helpdesk, official_tracking_url
+        FROM csc_knowledge
+        WHERE official_url IS NOT NULL
+        ORDER BY embedding <-> %s::vector
+        LIMIT %s
+        """,
+        (vector, top_k * 8),
+    )
+    rows = cursor.fetchall()
+    blocks = [_structured_block(row) for row in rows]
+    blocks = [block for block in blocks if block][:top_k]
+
+    return "\n\n".join(blocks)
+
+
 def vector_search(query, top_k=5):
 
     emb, error = _embedding(query)
@@ -133,18 +221,26 @@ def vector_search(query, top_k=5):
     vector = "[" + ",".join(map(str, emb)) + "]"
 
     try:
-        with conn:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    """
-                    SELECT content, source
-                    FROM documents
-                    ORDER BY embedding <-> %s::vector
-                    LIMIT %s
-                    """,
-                    (vector, top_k * 8),
-                )
-                rows = cursor.fetchall()
+        with conn.cursor() as cursor:
+            try:
+                structured_context = _structured_search(cursor, vector, top_k)
+            except psycopg2.Error:
+                conn.rollback()
+                structured_context = ""
+
+            if structured_context:
+                return structured_context
+
+            cursor.execute(
+                """
+                SELECT content, source
+                FROM documents
+                ORDER BY embedding <-> %s::vector
+                LIMIT %s
+                """,
+                (vector, top_k * 8),
+            )
+            rows = cursor.fetchall()
     except psycopg2.Error as exc:
         _safe_log(f"Vector search failed: {exc.__class__.__name__}")
         return ""
