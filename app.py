@@ -13,6 +13,17 @@ if "messages" not in st.session_state:
 # Sidebar
 with st.sidebar:
 
+    st.header("Privacy")
+    cloud_consent = st.checkbox(
+        "Allow cloud AI processing",
+        value=False,
+        help="When off, questions and retrieved knowledge stay local in this app.",
+    )
+    st.caption("Cloud AI uses Hugging Face first, then OpenRouter, then Grok after redaction.")
+    if st.button("Clear chat"):
+        st.session_state.messages = []
+        st.rerun()
+
     st.header("Add Knowledge")
 
     text_input = st.text_area("Paste knowledge")
@@ -46,7 +57,7 @@ if query:
     with st.chat_message("user"):
         st.write(query)
 
-    answer = ask(query)
+    answer = ask(query, cloud_consent=cloud_consent)
 
     with st.chat_message("assistant"):
         st.write(answer)
