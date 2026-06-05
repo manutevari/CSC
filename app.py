@@ -49,7 +49,7 @@ with st.sidebar:
         else:
             st.warning(status)
 
-    st.caption("Try: Explain all Digital Seva service forms in Class 8 level. How do I fill the PAN card form?")
+    st.caption("Try: How to fill all forms in CSC services? Explain like Class 8. How do I fill the PAN card form?")
 
 # Chat history
 for msg in st.session_state.messages:

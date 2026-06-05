@@ -113,6 +113,13 @@ DPDP note: केवल service के लिए जरूरी data collect �
 def builtin_service_context(query, language="en"):
 
     text = (query or "").lower()
+    normalized = (
+        text.replace("fiill", "fill")
+        .replace("fiil", "fill")
+        .replace("gudeance", "guidance")
+        .replace("guidence", "guidance")
+        .replace("from", "form")
+    )
     if "pan card" in text or "pancard" in text or text.strip() == "pan" or " pan " in f" {text} " or "पैन" in text:
         if language == "hi":
             return PAN_GUIDE_CONTEXT_HI
@@ -120,11 +127,20 @@ def builtin_service_context(query, language="en"):
     digital_seva_terms = (
         "digital seva",
         "digitalseva",
+        "csc service",
+        "csc services",
+        "csc form",
+        "csc forms",
         "all form",
         "all forms",
+        "fill all form",
+        "fill all forms",
         "all service",
         "all services",
         "service form",
+        "service forms",
+        "filling",
+        "guidance",
         "forms available",
         "portal services",
         "class 8",
@@ -132,7 +148,7 @@ def builtin_service_context(query, language="en"):
         "8th class",
     )
     digital_seva_terms_hi = ("डिजिटल सेवा", "सभी फॉर्म", "सभी सेव", "फॉर्म कैसे", "आठवीं", "8वीं")
-    if any(term in text for term in digital_seva_terms) or any(term in query for term in digital_seva_terms_hi):
+    if any(term in normalized for term in digital_seva_terms) or any(term in query for term in digital_seva_terms_hi):
         if language == "hi":
             return DIGITAL_SEVA_SERVICES_CONTEXT_HI
         return DIGITAL_SEVA_SERVICES_CONTEXT
