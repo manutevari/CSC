@@ -32,12 +32,18 @@ with st.sidebar:
     if st.button("Add Knowledge"):
 
         if text_input:
-            add_knowledge(text_input)
-            st.success("Knowledge added")
+            status = add_knowledge(text_input, cloud_consent=cloud_consent)
+            if cloud_consent and "unavailable" not in status.lower() and "missing" not in status.lower() and "could not" not in status.lower():
+                st.success(status)
+            else:
+                st.warning(status)
 
         elif url_input:
-            add_knowledge(url_input)
-            st.success("URL added")
+            status = add_knowledge(url_input, cloud_consent=cloud_consent)
+            if cloud_consent and "failed" not in status.lower() and "unavailable" not in status.lower() and "missing" not in status.lower():
+                st.success(status)
+            else:
+                st.warning(status)
 
 # Chat history
 for msg in st.session_state.messages:
