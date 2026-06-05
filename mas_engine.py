@@ -45,6 +45,7 @@ KNOWN_CONTEXT_HEADINGS = (
     "Fee Updates",
     "Comparison",
     "Important Notes",
+    "FAQ",
     "Official URL",
     "Official Helpdesk",
     "Official Tracking Page",
@@ -170,12 +171,12 @@ def _source_urls(context):
 def _official_urls(query, context, limit=5):
 
     urls = []
-    for url in official_urls_for_query(query, max_results=limit):
-        if is_allowed_url(url) and url not in urls:
-            urls.append(url)
-
     for url in _source_urls(context):
         if url not in urls:
+            urls.append(url)
+
+    for url in official_urls_for_query(query, max_results=limit):
+        if is_allowed_url(url) and url not in urls:
             urls.append(url)
 
     return urls[:limit]
@@ -400,7 +401,9 @@ def _structured_answer(query, context, response_language="auto"):
     enabled_sections = sections_for_mode(mode)
     service_name = _service_name(context)
     steps = _numbered_steps(context)
-    notes = _category_guidance_items(context) + _important_notes(context, query, response_language)
+    important_notes = _section_items(context, ("Important Notes",), limit=8)
+    faq = _section_items(context, ("FAQ",), limit=8)
+    notes = _category_guidance_items(context) + important_notes + _important_notes(context, query, response_language)
     purpose = _section_text(context, ("Purpose",))
     who_can_use = _section_text(context, ("Who Can Use",))
     eligibility = _section_text(context, ("Eligibility",))
@@ -441,49 +444,51 @@ def _structured_answer(query, context, response_language="auto"):
 
     if _is_hindi(query, response_language):
         sections = [
-            f"Service Name\n{service_name}",
-            "Purpose:\n" + (purpose or "Citizen को इस CSC/service form को सही official portal पर सुरक्षित तरीके से भरने में मदद करना।"),
+            f"सेवा का नाम\n{service_name}",
+            "उद्देश्य:\n" + (purpose or "Citizen को इस CSC/service form को सही official portal पर सुरक्षित तरीके से भरने में मदद करना।"),
         ]
         if show("who_can_use") and who_can_use:
-            sections.append("Who Can Use:\n" + who_can_use)
+            sections.append("कौन उपयोग कर सकता है:\n" + who_can_use)
         if show("eligibility") and eligibility:
-            sections.append("Eligibility:\n" + eligibility)
+            sections.append("पात्रता:\n" + eligibility)
         if show("prerequisites") and prerequisites:
-            sections.append("Prerequisites:\n" + _bullet_list(prerequisites))
+            sections.append("पहले से तैयारी:\n" + _bullet_list(prerequisites))
         if show("documents") and documents:
-            sections.append("Required Documents:\n" + _bullet_list(documents))
+            sections.append("जरूरी दस्तावेज:\n" + _bullet_list(documents))
         if show("fee_information") and fee_information:
-            sections.append("Fee Information:\n" + fee_information)
+            sections.append("फीस जानकारी:\n" + fee_information)
         if show("dsp_navigation") and dsp_navigation:
-            sections.append("DSP Navigation:\n" + _ordered_list(dsp_navigation))
+            sections.append("Digital Seva/DSP में रास्ता:\n" + _ordered_list(dsp_navigation))
         if show("form_filling") and form_filling:
-            sections.append("Form Filling Guide:\n" + _ordered_list(form_filling))
+            sections.append("फॉर्म कैसे भरें:\n" + _ordered_list(form_filling))
         if show("validation_rules") and validation_rules:
-            sections.append("Common Validation Rules:\n" + _bullet_list(validation_rules))
+            sections.append("सामान्य जांच नियम:\n" + _bullet_list(validation_rules))
         if show("upload_requirements") and upload_requirements:
-            sections.append("Upload Requirements:\n" + _bullet_list(upload_requirements))
+            sections.append("अपलोड नियम:\n" + _bullet_list(upload_requirements))
         if show("workflow") and workflow:
-            sections.append("Application Workflow:\n" + _ordered_list(workflow))
+            sections.append("आवेदन प्रक्रिया:\n" + _ordered_list(workflow))
         if show("status_tracking") and status_tracking:
-            sections.append("Status Tracking:\n" + status_tracking)
+            sections.append("स्टेटस कैसे देखें:\n" + status_tracking)
         if show("approval_process") and approval_process:
-            sections.append("Approval Process:\n" + approval_process)
+            sections.append("मंजूरी प्रक्रिया:\n" + approval_process)
         if show("download_print") and download_print:
             sections.append("Download / Print:\n" + download_print)
         if show("common_errors") and common_errors:
-            sections.append("Common Errors:\n" + _bullet_list(common_errors))
+            sections.append("सामान्य समस्याएं:\n" + _bullet_list(common_errors))
         if show("policies_circulars") and policies_circulars:
-            sections.append("Policies & Circulars:\n" + _bullet_list(policies_circulars))
+            sections.append("Policies / Circulars:\n" + _bullet_list(policies_circulars))
         if show("comparison") and comparison:
-            sections.append("Comparison:\n" + _bullet_list(comparison))
+            sections.append("तुलना:\n" + _bullet_list(comparison))
         if show("important_notes") and notes:
-            sections.append("Important Notes:\n" + _bullet_list(notes))
+            sections.append("जरूरी बातें:\n" + _bullet_list(notes))
+        if show("faq") and faq:
+            sections.append("अक्सर पूछे जाने वाले सवाल:\n" + _bullet_list(faq))
         if show("official_links") and urls:
-            sections.append("Official URL:\n" + "\n".join(urls))
+            sections.append("आधिकारिक URL:\n" + "\n".join(urls))
         if show("official_links") and official_helpdesk:
-            sections.append("Official Helpdesk:\n" + official_helpdesk)
+            sections.append("आधिकारिक Helpdesk:\n" + official_helpdesk)
         if show("official_links") and official_tracking_page:
-            sections.append("Official Tracking Page:\n" + official_tracking_page)
+            sections.append("आधिकारिक Tracking Page:\n" + official_tracking_page)
         return "\n\n".join(sections)
 
     sections = [
@@ -524,6 +529,8 @@ def _structured_answer(query, context, response_language="auto"):
         sections.append("Comparison:\n" + _bullet_list(comparison))
     if show("important_notes") and notes:
         sections.append("Important Notes:\n" + _bullet_list(notes))
+    if show("faq") and faq:
+        sections.append("FAQ:\n" + _bullet_list(faq))
     if show("official_links") and urls:
         sections.append("Official URL:\n" + "\n".join(urls))
     if show("official_links") and official_helpdesk:
@@ -623,7 +630,7 @@ def _llm_answer(provider, query, context, history=None, response_language="auto"
                 "Return only the final answer in this format, omitting unavailable sections: "
                 "Service Name; Purpose:; Who Can Use:; Prerequisites:; Required Documents:; DSP Navigation:; "
                 "Form Filling Guide:; Application Workflow:; Status Tracking:; Approval Process:; Download / Print:; "
-                "Common Errors:; Important Notes:; Official URL:. "
+                "Common Errors:; Important Notes:; FAQ:; Official URL:. "
                 "For DSP-specific help, include menu/navigation, role/access, validation errors, submission, status tracking, approval, and download/print only when those details are in the retrieved knowledge. "
                 "Tell users to enter personal identifiers only inside the official CSC/service portal, not in this chat. "
                 "Conversation history is only for continuity; it is not evidence."

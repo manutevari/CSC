@@ -51,6 +51,17 @@ CSC_SERVICE_URLS = (
     "https://www.pmjay.gov.in/",
     "https://beneficiary.nha.gov.in/",
     "https://services.india.gov.in/",
+    "https://pmkisan.gov.in/",
+    "https://pmfby.gov.in/",
+    "https://jeevanpramaan.gov.in/v1.0/",
+    "https://npstrust.org.in/",
+    "https://enps.nps-proteantech.in/",
+    "https://eshram.gov.in/indexmain",
+    "https://pmay-urban.gov.in/",
+    "https://pmaymis.gov.in/",
+    "https://pmayg.nic.in/",
+    "https://labour.gov.in/",
+    "https://scholarships.gov.in/",
 )
 
 
@@ -86,9 +97,24 @@ OFFICIAL_URL_TABLE = (
         "keywords": ("agriculture", "farmer", "crop", "agri"),
     },
     {
+        "service": "PM-KISAN",
+        "url": "https://pmkisan.gov.in/",
+        "keywords": ("pm kisan", "pm-kisan", "pmkisan", "farmer registration", "pm kisan status"),
+    },
+    {
+        "service": "Kisan Credit Card",
+        "url": "https://services.india.gov.in/",
+        "keywords": ("kisan credit card", "kcc", "agriculture credit"),
+    },
+    {
         "service": "CSC Academy",
         "url": "https://www.cscacademy.org/",
         "keywords": ("education", "academy", "course", "training", "skill", "skills"),
+    },
+    {
+        "service": "CSC Skill Services",
+        "url": "https://skill.csc-services.in/",
+        "keywords": ("skill", "skills", "training", "tally", "digital unnati", "course"),
     },
     {
         "service": "CSC Travel",
@@ -99,6 +125,16 @@ OFFICIAL_URL_TABLE = (
         "service": "CSC Insurance",
         "url": "https://insurance.csccloud.in/",
         "keywords": ("insurance", "bima", "policy", "fasal bima"),
+    },
+    {
+        "service": "PMFBY",
+        "url": "https://pmfby.gov.in/",
+        "keywords": ("pmfby", "pradhan mantri fasal bima", "crop insurance", "fasal bima"),
+    },
+    {
+        "service": "CSC Bank Mitra",
+        "url": "https://cscbankmitra.in/",
+        "keywords": ("bank mitra", "banking correspondent", "account opening", "bc service"),
     },
     {
         "service": "PAN Services",
@@ -131,9 +167,39 @@ OFFICIAL_URL_TABLE = (
         "keywords": ("ayushman", "pmjay", "pm-jay", "abha", "beneficiary nha"),
     },
     {
+        "service": "Jeevan Pramaan",
+        "url": "https://jeevanpramaan.gov.in/v1.0/",
+        "keywords": ("jeevan pramaan", "life certificate", "digital life certificate", "pension certificate"),
+    },
+    {
+        "service": "NPS",
+        "url": "https://npstrust.org.in/",
+        "keywords": ("nps", "national pension system", "national pension scheme"),
+    },
+    {
+        "service": "e-Shram",
+        "url": "https://eshram.gov.in/indexmain",
+        "keywords": ("e-shram", "eshram", "shram card", "labour card"),
+    },
+    {
+        "service": "PMAY",
+        "url": "https://pmay-urban.gov.in/",
+        "keywords": ("pmay", "awas yojana", "pradhan mantri awas", "pm awas"),
+    },
+    {
+        "service": "Scholarships",
+        "url": "https://scholarships.gov.in/",
+        "keywords": ("scholarship", "student scholarship", "nsp scholarship"),
+    },
+    {
+        "service": "CSC Safar",
+        "url": "https://cscsafar.in/",
+        "keywords": ("flight booking", "bus booking", "darshan booking", "ticket booking"),
+    },
+    {
         "service": "Government Services",
         "url": "https://services.india.gov.in/",
-        "keywords": ("government", "edistrict", "certificate", "birth", "death", "ration", "scheme"),
+        "keywords": ("government", "edistrict", "birth", "death", "ration", "scheme", "income certificate", "caste certificate", "domicile certificate", "labour registration"),
     },
 )
 

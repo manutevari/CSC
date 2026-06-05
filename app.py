@@ -47,7 +47,7 @@ with st.sidebar:
         else:
             st.warning(status)
 
-    st.caption("Try: What is DigiPay? DigiPay device error? FSSAI documents? Compare PAN reprint vs correction. How to use Ayushman service?")
+    st.caption("Try: PM Kisan status, how to become VLE, PAN correction, Jeevan Pramaan, e-Shram registration, PMGDISHA enrollment.")
 
 # Chat history
 for msg in st.session_state.messages:

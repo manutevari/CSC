@@ -61,6 +61,18 @@ DEFAULT_ALLOWED_DOMAINS = (
     "nha.gov.in",
     "beneficiary.nha.gov.in",
     "services.india.gov.in",
+    "pmkisan.gov.in",
+    "pmfby.gov.in",
+    "jeevanpramaan.gov.in",
+    "npstrust.org.in",
+    "enps.nps-proteantech.in",
+    "nps-proteantech.in",
+    "eshram.gov.in",
+    "pmay-urban.gov.in",
+    "pmaymis.gov.in",
+    "pmayg.nic.in",
+    "labour.gov.in",
+    "scholarships.gov.in",
 )
 
 

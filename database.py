@@ -170,7 +170,7 @@ def _structured_block(row):
         ("common_errors", "Common Errors"),
         ("policies_circulars", "Policies & Circulars"),
         ("comparison", "Comparison"),
-        ("faq", "Important Notes"),
+        ("faq", "FAQ"),
         ("official_helpdesk", "Official Helpdesk"),
         ("official_tracking_url", "Official Tracking Page"),
     )

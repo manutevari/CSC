@@ -1,11 +1,14 @@
 import re
 
+from core_knowledge_pack import CORE_SERVICE_KEYWORDS, CORE_SERVICE_PROFILE_CONTEXTS
+
 
 MODE_SECTIONS = {
     "overview": {
         "who_can_use",
         "eligibility",
         "important_notes",
+        "faq",
         "official_links",
     },
     "dsp_training": {
@@ -18,6 +21,7 @@ MODE_SECTIONS = {
         "download_print",
         "common_errors",
         "important_notes",
+        "faq",
         "official_links",
     },
     "form_filling": {
@@ -34,6 +38,7 @@ MODE_SECTIONS = {
         "download_print",
         "common_errors",
         "important_notes",
+        "faq",
         "official_links",
     },
     "troubleshooting": {
@@ -41,6 +46,7 @@ MODE_SECTIONS = {
         "status_tracking",
         "common_errors",
         "important_notes",
+        "faq",
         "official_links",
     },
     "documentation": {
@@ -51,12 +57,14 @@ MODE_SECTIONS = {
         "fee_information",
         "upload_requirements",
         "important_notes",
+        "faq",
         "official_links",
     },
     "circular": {
         "policies_circulars",
         "fee_information",
         "important_notes",
+        "faq",
         "official_links",
     },
     "comparison": {
@@ -65,10 +73,21 @@ MODE_SECTIONS = {
         "comparison",
         "workflow",
         "important_notes",
+        "faq",
         "official_links",
     },
     "catalog": {
+        "who_can_use",
+        "prerequisites",
+        "dsp_navigation",
+        "form_filling",
+        "workflow",
+        "status_tracking",
+        "approval_process",
+        "download_print",
+        "common_errors",
         "important_notes",
+        "faq",
         "official_links",
     },
 }
@@ -80,8 +99,8 @@ RESPONSE_MODE_KEYWORDS = (
     ("comparison", ("compare", "difference", " vs ", "versus", "reprint vs correction", "correction vs reprint", "अंतर", "तुलना")),
     ("troubleshooting", ("error", "issue", "problem", "not working", "failed", "pending", "rejected", "device not detected", "settlement", "troubleshoot", "समस्या", "एरर", "फेल")),
     ("documentation", ("documents", "document", "docs", "fees", "fee", "eligibility", "required", "charges", "दस्तावेज", "फीस", "योग्यता")),
-    ("form_filling", ("fill", "form", "application", "field", "upload", "apply", "फॉर्म", "भर", "आवेदन")),
-    ("dsp_training", ("how to use", "use", "navigation", "menu", "click", "login", "digital seva", "dsp", "portal", "कैसे उपयोग", "लॉगिन", "मेन्यू")),
+    ("form_filling", ("fill", "form", "application", "field", "upload", "apply", "registration", "register", "enroll", "enrol", "enrollment", "enrolment", "claim", "correction", "update", "reprint", "duplicate", "lost", "book", "booking", "फॉर्म", "भर", "आवेदन", "रजिस्ट्रेशन", "सुधार")),
+    ("dsp_training", ("how to", "how to use", "how to become", "use", "navigation", "menu", "click", "login", "digital seva", "dsp", "portal", "status", "track", "tracking", "download", "print", "approval", "process", "workflow", "steps", "cash withdrawal", "balance enquiry", "mini statement", "biometric process", "consultation", "appointment", "certificate", "course", "cancellation", "कैसे", "कैसे उपयोग", "लॉगिन", "मेन्यू", "स्टेटस", "स्थिति", "प्रक्रिया")),
     ("overview", ("what is", "about", "purpose", "explain", "क्या है", "बताओ")),
 )
 
@@ -369,6 +388,10 @@ SERVICE_KEYWORDS = (
 )
 
 
+SERVICE_PROFILE_CONTEXTS = {**CORE_SERVICE_PROFILE_CONTEXTS, **SERVICE_PROFILE_CONTEXTS}
+SERVICE_KEYWORDS = CORE_SERVICE_KEYWORDS + SERVICE_KEYWORDS
+
+
 def detect_response_mode(query):
 
     text = f" {(query or '').lower()} "
@@ -385,6 +408,9 @@ def sections_for_mode(mode):
 
 
 def profile_context(query, language="en"):
+
+    if detect_response_mode(query) == "catalog":
+        return ""
 
     service = detect_service_key(query)
     if not service:
