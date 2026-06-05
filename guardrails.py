@@ -50,6 +50,7 @@ DEFAULT_ALLOWED_DOMAINS = (
     "onlineservices.nsdl.com",
     "pan.utiitsl.com",
     "utiitsl.com",
+    "tax2win.in",
 )
 
 

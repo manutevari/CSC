@@ -300,8 +300,6 @@ def _local_chatbot_answer(query, context, reason, response_language="auto"):
 DPDP सुरक्षा: Aadhaar, PAN number, bank details, OTP, password या बच्चे/नाबालिग का personal data इस chat में न डालें। ऐसी जानकारी केवल official CSC/service portal में ही भरें।
 
 {context}
-
-{reason}
 """
 
             return f"""{_sentiment_prefix(query, response_language)}Here is the simple guide from approved CSC/official service sources.
@@ -309,8 +307,6 @@ DPDP सुरक्षा: Aadhaar, PAN number, bank details, OTP, password य
 DPDP safety: Do not paste Aadhaar, PAN number, bank details, OTP, passwords, or child/minor personal data in this chat. Enter those only inside the official CSC/service portal.
 
 {context}
-
-{reason}
 """
 
         if _is_hindi(query, response_language):
@@ -331,8 +327,6 @@ Form भरने की checklist:
 
 प्राप्त CSC source text:
 {context}
-
-{reason}
 """
 
         return f"""{_sentiment_prefix(query, response_language)}I found approved CSC/official service data and will stay in local privacy mode.
@@ -351,8 +345,6 @@ Form-filling checklist:
 
 Retrieved CSC source text:
 {context}
-
-{reason}
 """
 
     setup_hint = (

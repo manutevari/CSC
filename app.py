@@ -1,7 +1,6 @@
 import streamlit as st
 from mas_engine import ask
 from knowledge import add_knowledge, index_csc_service_guides
-from guardrails import allowed_domains_label
 
 st.set_page_config(page_title="CSC AI Assistant")
 
@@ -16,12 +15,11 @@ with st.sidebar:
 
     st.header("Privacy")
     cloud_consent = st.checkbox(
-        "Allow Tavily search and cloud AI for chatbot",
+        "Allow live official-source search and AI",
         value=False,
         help="When off, questions stay local and only the built-in CSC URL catalog is suggested.",
     )
-    st.caption("Live mode uses Tavily for CSC/official service URLs, then Hugging Face/OpenRouter/Grok after redaction.")
-    st.caption(f"CSC data guardrail: {allowed_domains_label()}")
+    st.caption("Guardrail active: answers use CSC/official service sources only, after DPDP redaction.")
     response_language = st.selectbox("Response language", ["Auto", "English", "Hindi"], index=0)
     if st.button("Clear chat"):
         st.session_state.messages = []
@@ -49,7 +47,7 @@ with st.sidebar:
         else:
             st.warning(status)
 
-    st.caption("Try: How to fill all forms in CSC services? Explain like Class 8. How do I fill the PAN card form?")
+    st.caption("Try: How to fill Aadhaar service form? How to fill electricity bill form? Explain all CSC service forms like Class 8.")
 
 # Chat history
 for msg in st.session_state.messages:

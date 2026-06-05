@@ -38,6 +38,7 @@ CSC_SERVICE_URLS = (
     "https://www.incometax.gov.in/iec/foportal/help/all-topics/instant-e-pan/faq",
     "https://www.protean-tinpan.com/services/pan/pan-index.html",
     "https://www.pan.utiitsl.com/PAN/",
+    "https://tax2win.in/",
 )
 
 
